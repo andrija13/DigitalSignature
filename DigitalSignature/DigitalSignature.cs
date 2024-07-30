@@ -8,6 +8,6 @@ namespace DigitalSignature
 
         public string HashDocument { get; set; }
 
-        public byte[] Signature { get; set; }
+        public string Signature { get; set; }
     }
 }

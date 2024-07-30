@@ -103,7 +103,7 @@ namespace DigitalSignature
                 var digitalSignatue = new DigitalSignature
                 {
                     HashDocument = Convert.ToBase64String(hashBytes),
-                    Signature = signature,
+                    Signature = Convert.ToBase64String(signature),
                     CertificateThumbprint = certificate.Thumbprint
                 };
                 DigitalSignatures.Add(digitalSignatue);
@@ -147,7 +147,8 @@ namespace DigitalSignature
                     return;
                 }
 
-                bool signatureValid = publicKey.VerifyHash(hashBytes, digitalSignature.Signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                var signatureBytes = Convert.FromBase64String(digitalSignature.Signature);
+                bool signatureValid = publicKey.VerifyHash(hashBytes, signatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
                 if (signatureValid)
                 {
                     //Ovde dodati ko ga je potpisao.
