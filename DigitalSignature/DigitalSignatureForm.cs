@@ -40,7 +40,10 @@ namespace DigitalSignature
 
                 foreach (var cert in validCerts)
                 {
-                    var certInfo = "Ime: " + cert.GetNameInfo(X509NameType.SimpleName, false);
+                    var certificateName = cert.GetNameInfo(X509NameType.SimpleName, false);
+                    certificateName = certificateName.Substring(certificateName.LastIndexOf("/") + 1);
+
+                    var certInfo = "Ime: " + certificateName;
                     certInfo += ", Važi od: " + cert.NotBefore.Date.ToString("dd.MM.yyyy.");
                     certInfo += ", Važi do: " + cert.NotAfter.Date.ToString("dd.MM.yyyy.");
 
@@ -61,7 +64,15 @@ namespace DigitalSignature
                 DialogResult result = openFileDialog.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    lblChosenDocument.Text = openFileDialog.SafeFileName;
+                    if (openFileDialog.SafeFileName.Length > 50)
+                    {
+                        string extension = Path.GetExtension(openFileDialog.FileName);
+                        lblChosenDocument.Text = openFileDialog.SafeFileName.Substring(0, 65) + ".." + extension;
+                    }
+                    else
+                    {
+                        lblChosenDocument.Text = openFileDialog.SafeFileName;
+                    }
                 }
 
                 if (string.IsNullOrEmpty(openFileDialog.FileName))
@@ -143,7 +154,7 @@ namespace DigitalSignature
                 var digitalSignature = DigitalSignatures.FirstOrDefault(x => x.HashDocument == hashString && x.CertificateThumbprint == certificate.Thumbprint);
                 if (digitalSignature == null)
                 {
-                    MessageBox.Show("Dokument nije potpisao izabrani korisnik.", "Obaveštenje", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Digitalni potpis nije validan. Dokument je možda izmenjen.", "Obaveštenje", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
@@ -151,8 +162,12 @@ namespace DigitalSignature
                 bool signatureValid = publicKey.VerifyHash(hashBytes, signatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
                 if (signatureValid)
                 {
-                    //Ovde dodati ko ga je potpisao.
-                    MessageBox.Show("Digitalni potpis je validan. Dokument nije menjan.", "Obaveštenje", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    var certificateName = certificate.GetNameInfo(X509NameType.SimpleName, false);
+                    certificateName = certificateName.Substring(certificateName.LastIndexOf("/") + 1);
+
+                    MessageBox.Show("Dokument jeste potpisao/la " + certificateName + ". \n" +
+                                    "Digitalni potpis je validan i dokument nije menjan. \n", 
+                                    "Obaveštenje", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
